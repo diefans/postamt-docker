@@ -1,0 +1,17 @@
+dbpath = /etc/postfix/private/mail.sqlite
+
+query = SELECT substr((100 + rclass), 2, 2) FROM Domain
+	WHERE active!=0 AND name IS '%s'
+
+result_format = RC%s
+
+# BUG: access-rcpt.query does not work for a catchall address. This
+# solves that, or for a better solution: do not use catchalls!
+#
+# This query would need to be enabled at the end of your
+# smtpd_recipient_restrictions:
+#
+# smtpd_recipient_restrictions = permit_mynetworks,
+#	reject_unauth_destination,
+#	check_recipient_access $query/access-rcpt.query,
+#	check_recipient_access $query/access-rcptDomain.query

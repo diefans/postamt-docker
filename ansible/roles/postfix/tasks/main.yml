@@ -1,0 +1,23 @@
+---
+# standard postfix installation
+
+- name: install postfix
+  apt: name={{ item }} state=present
+  with_items:
+    - postfix
+    - tumgreyspf
+
+- name: setup master.cf
+  template: src=master.cf.j2 dest=/etc/postfix/master.cf
+
+- name: setup main.cf
+  template: src=main.cf.j2 dest=/etc/postfix/main.cf
+
+- name: install queries
+  copy: src=query dest=/etc/postfix
+
+- name: create private
+  file: path=/etc/postfix/private state=directory owner=postfix mode=0750
+
+- name: hardlink postfix mail db
+  file: path=/etc/postfix/private/mail.sqlite src={{ data }}/mail.sqlite state=link

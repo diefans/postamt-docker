@@ -1,0 +1,25 @@
+driver = sqlite
+
+connect = /etc/dovecot/private/mail.sqlite
+
+### deny password_query
+# The "deny=yes" passdb needs to handle either a "user@domain" or a
+# plain "user" credential. In the former case, we look up the domain;
+# latter case we use the special null domain, Domain.id=0. A simple glob
+# expression to detect the "@" sign tells us which case we are in.
+
+password_query = SELECT '%u' FROM Address AS A1 \
+	JOIN Domain AS D1 ON (A1.domain=D1.id) \
+	WHERE A1.localpart IS '%n' \
+	AND (CASE WHEN '%u' GLOB '*@*' THEN \
+		D1.name IS '%d' ELSE \
+		D1.id=0 END) \
+	AND A1.active=-1
+
+# This is the third state of the tristate Address.active column.
+
+# BUG: an "@" sign is permissible in an address localpart. This query
+# works fine with SQL (virtual) users, because they have another "@" in
+# their username anyway. But if your OS supports "@" in the username,
+# this will break -- and you get to keep both pieces! I would not use
+# "@" in system usernames, so I don't intend to fix this. :)

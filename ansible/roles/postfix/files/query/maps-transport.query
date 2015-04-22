@@ -1,0 +1,99 @@
+dbpath = /etc/postfix/private/mail.sqlite
+
+# Shorthand in this query:
+# LA=lookup address
+# LD=lookup domain
+# DT=domain's transport
+# AT=address's transport
+# [AD]TN=nexthop domain
+
+query = SELECT DISTINCT CASE WHEN AT.id IS NOT NULL
+	    THEN coalesce(AT.transport, '')
+		|| ':' || (CASE WHEN AT.mx=0
+		THEN '[' || coalesce(ATN.name, '') || ']'
+		ELSE coalesce(ATN.name, '') END) ||
+		(CASE WHEN AT.port IS NOT NULL
+		THEN ':' || AT.port ELSE '' END)
+	    ELSE coalesce(DT.transport, '')
+		|| ':' || (CASE WHEN DT.mx=0
+		THEN '[' || coalesce(DTN.name, '') || ']'
+		ELSE coalesce(DTN.name, '') END) ||
+		(CASE WHEN DT.port IS NOT NULL
+		THEN ':' || DT.port ELSE '' END)
+	    END
+	FROM Domain AS LD
+	    LEFT JOIN Address AS LA ON LD.id=LA.domain
+	    LEFT JOIN Transport AS DT on LD.transport=DT.id
+	    LEFT JOIN Transport AS AT on LA.transport=AT.id
+	    LEFT JOIN Domain AS DTN ON DT.nexthop=DTN.id
+	    LEFT JOIN Domain AS ATN ON AT.nexthop=ATN.id
+	WHERE (LA.localpart || '@' || LD.name IS '%s'
+		AND CASE WHEN AT.id IS NOT NULL
+		    THEN AT.active!=0 AND LA.active!=0
+		WHEN DT.id IS NOT NULL
+		    THEN DT.active!=0 AND LD.active!=0
+		END)
+	    OR (LD.name IS '%s'
+		AND DT.active!=0 AND LD.active!=0)
+
+# Because of all the LEFT JOINs, this query returns multiple identical
+# rows in many cases; thus this SELECT needed the DISTINCT keyword to
+# limit results.
+
+# The SELECT is entirely within one CASE expression. The first part,
+# "WHEN AT.id IS NOT NULL", triggers only for addresses listed in the
+# Address table which also have an Address.transport entry. The ELSE
+# part triggers otherwise, but will only return results when the lookup
+# domain record has a Domain.transport entry.
+
+# Inside each of the CASE conditions, the same sort of formatting for
+# display is done. In the first part, values are taken from AT and ATN;
+# DT and DTN in the second. First the [AD]T.transport string is taken,
+# or if null, an empty string is substituted. A colon is added; this
+# colon is in fact the only token sure to be returned by this query.
+
+# Next, the condition of [AD]T.mx is checked; if zero, the [AD]TN.name
+# string is enclosed in square brackets "[]". Otherwise the [AD]TN.name
+# string (or empty string, if that is null) is used.
+
+# Finally the state of [AD]T.port is checked. If that is not null,
+# another colon is added, followed by the port number. Otherwise another
+# empty string is added.
+
+# The FROM table is Domain, because the only input token we can expect
+# in all cases is a Domain.name string. First, Address is brought in as
+# a LEFT JOIN ON LD.id=LA.domain. This will be all NULL in case of an
+# unlisted address or a domain-only lookup.
+
+# Next, Transport is LEFT JOINed on each table's transport column.
+# Either of these can be null. (If both are null, the query returns
+# nothing.) And then Domain is LEFT JOINed on each of those Transport
+# table's nexthop column. This too can be null.
+
+# The WHERE clause is in two parts to account for user@domain lookups as
+# well as domain lookups. The left side of the OR matches user@domain
+# lookups, and repeats the same condition check as in SELECT: "CASE WHEN
+# AT.id IS NOT NULL", which means that we have a listed Address with an
+# Address.transport entry. It then checks the Address record and
+# corresponding Transport record for their active boolean being not
+# false (not zero.)
+
+# The second CASE condition is "WHEN DT.id IS NOT NULL", meaning that
+# the looked-up Domain has a transport entry. It then checks that Domain
+# record and corresponding Transport record for their active boolean
+# being not false (not zero.)
+
+# The right side of the OR matches only on a bare domain lookup, and
+# additionally checks that Domain record and corresponding Transport
+# record for their active boolean being not false (not zero.)
+
+# Whew.
+
+# Could this have been simpler? Yes, but only with duplication of data
+# in the database. A previous version of the Transport table, as well
+# as all MySQL examples I found, have a simple key/string structure,
+# storing the entire transport:nexthop:port as a string value. There are
+# pros and cons to each approach. The biggest "pro" to this one is that
+# it's in SQLite and not MySQL (meaning by that: the system is stable
+# and self-contained, not dependent on the external mysqld process.
+# Great pain comes to you when your transport_maps lookup fails.)

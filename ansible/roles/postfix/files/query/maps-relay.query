@@ -1,0 +1,19 @@
+dbpath = /etc/postfix/private/mail.sqlite
+query = SELECT A1.id FROM Address AS A1
+	JOIN Domain AS D1 ON A1.domain=D1.id
+	WHERE A1.localpart || '@' || D1.name IS '%s'
+	AND A1.active!=0
+
+# This is the relay_recipient_maps query, and it illustrates the basis
+# for all the other maps queries. The Address table contains a string
+# localpart and an integer pointer to the Domain table for each listed
+# address. In the FROM clause we JOIN the Domain table to get the
+# Domain.name string.
+
+# As in all the others, we test for Address.active to be nonzero, which
+# is to say the address is enabled for mail receipt.
+
+# The sample data does not show it, but it would be possible to
+# implement a catchall in a relay domain with an Address table entry
+# with an empty string as localpart. (Don't do it. Friends don't let
+# friends use catchall addresses!)

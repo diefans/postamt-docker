@@ -1,0 +1,66 @@
+dbpath = /etc/postfix/private/mail.sqlite
+
+# Shorthand in this query:
+# AA = Alias Address (the address we are looking up)
+# TA = Target Address
+# TD = Target Domain
+
+query = SELECT ALL
+	  CASE WHEN Alias.target=0 THEN Alias.extension
+	  ELSE TA.localpart ||
+	    (CASE WHEN Alias.extension IS NOT NULL THEN '-'
+	      || Alias.extension ELSE '' END) ||
+	    (CASE WHEN TD.id=0 THEN '' ELSE '@' || TD.name END)
+	  END
+	FROM "Alias"
+	JOIN "Address" AS TA ON Alias.target=TA.id
+	JOIN "Domain" AS TD ON TA.domain=TD.id
+	JOIN "Address" AS AA ON Alias.address=AA.id
+	WHERE AA.localpart IS '%s'
+	AND AA.domain=0 AND Alias.active!=0;
+
+# This is the Postfix alias_maps lookup. The FROM clause is a bit
+# simpler than in the virtual_alias_maps lookup, because we have no need
+# to join Domain and look up the alias address' Domain.name (it's NULL).
+# But we do have to JOIN Address for each of the alias address and the
+# target address, and for the latter, we do have to JOIN Domain to get
+# the Domain.name string.
+
+# The SELECT clause is SELECT ALL, which in SQLite is the default
+# behavior, but I used ALL here simply to show that this query is in many
+# many cases likely to return multiple valid rows.
+
+# The outer CASE expression in SELECT is to differentiate the features
+# specific to aliases(5) as opposed to virtual(5) aliases, and this is
+# done with the special value of Alias.target=0. In that case we are not
+# getting an address[-extension][@domain] as the lookup result; we are
+# getting a "|command" or ":include:" or "/file/to/append", that being
+# determined by that row's corresponding value of Alias.extension.
+
+# The ELSE expression in that outer CASE covers the more typical use of
+# returning an address as target, and that address is constructed from
+# the TA.localpart (with -Alias.extension appended if needed) and either
+# an empty string if TD.id=0 (to return an unqualified localpart) or an
+# "@" sign plus the TD.name string value.
+
+# (In general I recommend against this and prefer to have an explicit
+# @domain with every address. But sometimes it is useful. Offer void
+# where taxed or prohibited, or if the reader fails to understand
+# append_at_myorigin in the postconf(5) manual.)
+
+# The WHERE clause is fairly simple. We know for alias_maps that we are
+# looking at an unqualified localpart of an address, and we have used
+# Address.domain=0 to designate these in the database. And as with all
+# maps queries, we test that the Address.active value is nonzero; that
+# it is not disabled for receipt of mail.
+
+# This query has the postconf value of $recipient_delimiter hardcoded:
+# '-' above. If you change that in dovecot/conf.d/15-lda.conf and
+# main.cf you must change it here too!
+
+# A simple plain-language rundown:
+# Select:
+#	Alias.extension when Alias.target=0, else
+#	(Target's Address.localpart,
+#	(- and Alias.extension if that exists)
+#	and '@' and Target's Domain.name)

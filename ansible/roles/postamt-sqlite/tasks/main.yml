@@ -1,0 +1,14 @@
+---
+# setup of sqlite db
+
+- name: install sqlite3
+  apt: name=sqlite3 state=present
+
+- name: create data
+  file: path={{ data }} state=directory
+
+- name: copy sql
+  copy: src=create.sql dest={{ root }}/create.sql
+
+- name: create db file
+  shell: sqlite3 -echo "{{ data }}/mail.sqlite" < {{ root }}/create.sql

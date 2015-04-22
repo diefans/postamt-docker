@@ -1,0 +1,20 @@
+---
+# default dovecot installation
+
+- name: install dovecot
+  apt: name={{ item }} state=present
+  with_items:
+    - dovecot-sqlite
+    - dovecot-imapd
+
+- name: install dovecot.conf
+  copy: src=dovecot.conf dest=/etc/dovecot
+
+- name: install dovecot configs
+  copy: src=conf.d dest=/etc/dovecot
+
+- name: create private
+  file: path=/etc/dovecot/private state=directory owner=dovecot mode=0750
+
+- name: hardlink dovecot mail db
+  file: path=/etc/dovecot/private/mail.sqlite src={{ data }}/mail.sqlite state=link

@@ -1,0 +1,26 @@
+dbpath = /etc/postfix/private/mail.sqlite
+query = SELECT coalesce(VM.gid, 800)
+	FROM VMailbox AS VM
+	JOIN Address AS A1 ON VM.id=A1.id
+	JOIN Domain AS D1 ON A1.domain=D1.id
+	WHERE A1.localpart || '@' || D1.name IS '%s'
+	AND VM.active!=0
+
+# Most howtos for Postfix virtual mailboxes, including the official
+# VIRTUAL_README document, use static maps for UID and GID:
+#	virtual_uid_maps = static:5000
+#	virtual_gid_maps = static:5000
+# This is easiest for usability, but exposes a potential security
+# weakness in that an exploit of the imapd or the virtual user/group
+# could lead to compromise or loss of all mailboxes.
+
+# Here for the GID query, we use a default shared GID which owns and has
+# g+rwx privilege on /home/vmail, under which is where we deliver mail
+# to %d/%u/Mail/ maildirs. This means that virtual(8) can create new
+# mailboxes when mail arrives.
+
+# This query selects the first non-null value of VMailbox.gid or 800,
+# which is that default shared GID. As in other maps, Address is joined
+# to get the localpart, and Domain is joined to get the Domain.name.
+# VMailbox.active is checked to ensure that the address has not been
+# disabled.

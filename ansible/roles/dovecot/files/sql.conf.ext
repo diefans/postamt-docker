@@ -1,0 +1,92 @@
+### Default comments [mostly] removed from here, except this (and a few
+### others:
+# This file is opened as root, so it should be owned by root and mode
+# 0600.
+### For SQLite, there is nothing of a sensitive nature in this file, so
+### mode 644 works.
+
+# Database driver: mysql, pgsql, sqlite
+driver = sqlite
+
+# Database connection string. This is driver-specific setting.
+#
+# sqlite:
+#   The path to the database file.
+#
+connect = /etc/dovecot/private/mail.sqlite
+
+# Default password scheme.
+#
+# List of supported schemes is in
+# http://wiki2.dovecot.org/Authentication/PasswordSchemes
+#
+default_pass_scheme = MD5
+
+# Commonly used available substitutions (see
+# http://wiki2.dovecot.org/Variables for full list):
+#   %u = entire user@domain
+#   %n = user part of user@domain
+#   %d = domain part of user@domain
+
+### passdb and userdb lookups
+#
+# For both queries: the VMailbox table contains id, a numeric
+# pointer to id in the Address table. Address has a text string,
+# localpart, and domain, a numeric pointer to id in the Domain
+# table. Domain contains the text string, name. So Address is
+# joined on id=id, and Domain is joined on domain=id.
+
+### password_query (passdb)
+#
+# We use %u (as provided by the client) as user, and look up each
+# component (%n and %d) in the appropriate tables. Where found, we
+# return password as password.
+
+### This was a working separate query before prefetch
+#password_query = SELECT '%u' AS user, V1.password AS password \
+#	FROM VMailbox AS V1 \
+#	JOIN Address AS A1 ON (V1.id=A1.id) \
+#	JOIN Domain AS D1 ON (A1.domain=D1.id) \
+#	WHERE A1.localpart IS '%n' \
+#	AND D1.name IS '%d' \
+#	AND V1.active!=0
+#	WHERE A1.localpart || '@' || D1.name IS '%u' \
+
+### This has merged the userdb query for the prefetch userdb; it means
+### one less SQL query is required. The passdb parts are described in
+### the comments above; the userdb parts are described with user_query
+### below. The only difference is that we preface the uid, gid and home
+### field names with "userdb_" in this query.
+password_query = SELECT '%u' AS user, V1.password, \
+	coalesce(V1.uid, D1.class) AS userdb_uid, \
+	coalesce(V1.gid, 800) AS userdb_gid, \
+	'/home/' || coalesce(V1.home, 'vmail/%d/%n') AS userdb_home \
+	FROM VMailbox AS V1 \
+	JOIN Address AS A1 ON (V1.id=A1.id) \
+	JOIN Domain AS D1 ON (A1.domain=D1.id) \
+	WHERE A1.localpart IS '%n' \
+	AND D1.name IS '%d' \
+	AND V1.active!=0
+
+### user_query (userdb)
+#
+# We take the first non-null value of uid (which can be NULL) and
+# class (which must not be NULL) as uid; then the first non-null of
+# gid (which can be NULL) or 800 as gid. Then home is constructed of
+# "/home/" and the first non-null value of home (which can be NULL)
+# and "vmail/<name>/<localpart>". The WHERE clause is the same as in
+# password_query.
+
+### Even with the prefetch userdb, a user_query is still needed.
+user_query = SELECT coalesce(V1.uid, D1.class) AS uid, \
+	coalesce(V1.gid, 800) AS gid, \
+	'/home/' || coalesce(V1.home, 'vmail/%d/%n') AS home \
+	FROM VMailbox AS V1 \
+	JOIN Address AS A1 ON (v1.id=A1.id) \
+	JOIN Domain AS D1 ON (A1.domain=D1.id) \
+	WHERE A1.localpart IS '%n' \
+	AND D1.name IS '%d' \
+	AND V1.active!=0
+
+# Query to get a list of all usernames.
+#iterate_query = (not implemented, not needed)

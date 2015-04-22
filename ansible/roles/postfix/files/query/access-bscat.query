@@ -1,0 +1,8 @@
+dbpath = /etc/postfix/private/mail.sqlite
+query = SELECT ALL target FROM BScat WHERE lower(sender) IS '%s'
+	ORDER BY priority
+
+# This query is self-contained in the BScat table. If the sender address
+# matches one of the three suspicious characters, a restriction class is
+# returned which will cause the client IP address to be looked up
+# against backscatterer DNSBLs.

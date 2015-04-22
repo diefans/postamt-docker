@@ -1,0 +1,12 @@
+---
+# setup admin virtual env
+
+- name: install virtual env
+  pip: name=virtualenv state=present
+
+
+#- name: create virtual env
+#  command: mkvirtualenv {{ root }}
+
+#- name: install admin
+#  pip: name=click state=present virtual_env=

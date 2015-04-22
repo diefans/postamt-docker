@@ -1,0 +1,7 @@
+- hosts: localhost
+  roles:
+    - supervisor
+    - postamt-sqlite
+    - postamt-admin
+    - postfix
+    - dovecot

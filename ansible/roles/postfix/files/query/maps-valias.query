@@ -1,0 +1,64 @@
+dbpath = /etc/postfix/private/mail.sqlite
+
+# Shorthand in this query:
+# AA = Alias Address (the address we are looking up)
+# AD = Alias Domain (the domain part of that address)
+# TA = Target Address (the address we are redirecting to)
+# TD = Target Domain (the domain part of that address)
+# VA = Virtual Alias
+
+query = SELECT TA.localpart || (CASE WHEN VA.extension IS NOT NULL
+	  THEN '-' || VA.extension ELSE '' END) ||
+	  (CASE WHEN TD.id=0 THEN '' ELSE '@' || TD.name END)
+	FROM Alias AS VA
+	  JOIN Address AS TA ON (VA.target = TA.id)
+	  JOIN Domain AS TD ON (TA.domain = TD.id)
+	  JOIN Address AS AA ON (VA.address = AA.id)
+	  JOIN Domain AS AD ON (AA.domain = AD.id)
+	WHERE AA.localpart || '@' || AD.name IS '%s'
+	AND VA.active!=0
+
+# This query has the postconf value of $recipient_delimiter hardcoded:
+# '-' above. If you change that in dovecot/conf.d/15-lda.conf and
+# main.cf you must change it here too!
+
+# The Alias table is simple in appearance, but it defines several
+# complex relationships. Each of Alias.address and Alias.target is a
+# pointer to the Address table, where the localpart is stored along with
+# an integer pointer to the Domain table. So this query joins Address
+# and Domain twice, once each for Alias.address and Alias.target. The
+# shorthand summary above is to help understand what this query does.
+
+# Here in virtual_alias_maps we do not have the features of invoking a
+# command, appending to a file, or :include: of a file, so in this case
+# the Alias.extension column is strictly for what it says it is: the
+# optional address extension after recipient_delimiter. The SELECT
+# clause tests for Alias.extension and inserts the delimiter and the
+# extension after the target address' localpart if necessary.
+
+# Note that TD.id=0 in SELECT returns an unqualified localpart. (In
+# general I recommend against this and prefer to have an explicit
+# @domain with every address. But sometimes it is useful. Offer void
+# where taxed or prohibited, or if the reader fails to understand
+# append_at_myorigin in the postconf(5) manual.)
+
+# The WHERE clause assembles the alias address' localpart, an "@" sign,
+# and the alias address' Domain.name. This enables the use of an empty
+# string localpart to implement a catchall address for any given domain,
+# because after the user@domain search, Postfix looks for "@domain" in
+# virtual_alias_maps.
+
+# The WHERE clause also goes on to check the alias address' value of
+# active, where if zero, the record does not match.
+
+# Differentiation from alias_maps here is not necessary, since a NULL
+# Domain.name will never be matched. Speaking of which, one documented
+# feature I have NOT implemented here is that of a bare localpart as
+# lookup key. It could have been done with a different method of
+# distinction from alias_maps, but I like it this way and do not
+# consider this feature to be important; alias_maps has us covered for
+# that functionality if it is needed.
+
+# Thanks to Frank Gingras for help with this query. It took my SQL
+# understanding to a higher level, such that I was later able to
+# implement the alias_maps and transport_maps queries on my own. :)

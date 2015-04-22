@@ -1,0 +1,22 @@
+dbpath = /etc/postfix/private/mail.sqlite
+query = SELECT localpart FROM Address
+	WHERE localpart is '%s' AND domain=0 AND active!=0
+
+# This is an optional query for local_recipient_maps. I chose not to
+# deploy it for usability reasons, but this file is here as
+# demonstration that the one SQLite database can indeed manage all
+# Postfix lookups.
+
+# This will work as-is with the sample data if the local_recipient_maps
+# line in main.cf is uncommented. To continue to use it, ensure that any
+# new local user is added to the Address table, and closed accounts are
+# deleted therefrom.
+
+# Note that we're using the standard of (-1 * $UID) for the Address.id
+# for system accounts in the sample data. That is for hoped future
+# integration with nss-sqlite or pam-sqlite. It's not important at this
+# point.
+
+# Note also the use of the special value of Address.domain=0, as in
+# alias_maps. Since we do not have to look up a Domain.name for local
+# recipients, there is no need to JOIN the Domain table.
