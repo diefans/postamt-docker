@@ -1,11 +1,11 @@
 dbpath = /etc/postfix/private/mail.sqlite
-query = SELECT coalesce(VM.home, 'vmail/%d/%u')
-	FROM VMailbox AS VM
-	JOIN Address AS A1 ON VM.id=A1.id
-	JOIN Domain AS D1 ON A1.domain=D1.id
-	WHERE A1.localpart || '@' || D1.name IS '%s'
-	AND VM.active!=0
-result_format = %s/Mail/
+query = SELECT coalesce(VM.home, '/%d/%u')
+    FROM VMailbox AS VM
+    JOIN Address AS A1 ON VM.id=A1.id
+    JOIN Domain AS D1 ON A1.domain=D1.id
+    WHERE A1.localpart || '@' || D1.name IS '%s'
+    AND VM.active!=0
+result_format = %s/mail/
 
 # This is for the virtual_mailbox_maps lookup, which returns the path
 # (relative to virtual_mailbox_base) to a virtual mailbox. It takes

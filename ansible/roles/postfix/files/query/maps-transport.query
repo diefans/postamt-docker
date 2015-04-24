@@ -8,33 +8,33 @@ dbpath = /etc/postfix/private/mail.sqlite
 # [AD]TN=nexthop domain
 
 query = SELECT DISTINCT CASE WHEN AT.id IS NOT NULL
-	    THEN coalesce(AT.transport, '')
-		|| ':' || (CASE WHEN AT.mx=0
-		THEN '[' || coalesce(ATN.name, '') || ']'
-		ELSE coalesce(ATN.name, '') END) ||
-		(CASE WHEN AT.port IS NOT NULL
-		THEN ':' || AT.port ELSE '' END)
-	    ELSE coalesce(DT.transport, '')
-		|| ':' || (CASE WHEN DT.mx=0
-		THEN '[' || coalesce(DTN.name, '') || ']'
-		ELSE coalesce(DTN.name, '') END) ||
-		(CASE WHEN DT.port IS NOT NULL
-		THEN ':' || DT.port ELSE '' END)
-	    END
-	FROM Domain AS LD
-	    LEFT JOIN Address AS LA ON LD.id=LA.domain
-	    LEFT JOIN Transport AS DT on LD.transport=DT.id
-	    LEFT JOIN Transport AS AT on LA.transport=AT.id
-	    LEFT JOIN Domain AS DTN ON DT.nexthop=DTN.id
-	    LEFT JOIN Domain AS ATN ON AT.nexthop=ATN.id
-	WHERE (LA.localpart || '@' || LD.name IS '%s'
-		AND CASE WHEN AT.id IS NOT NULL
-		    THEN AT.active!=0 AND LA.active!=0
-		WHEN DT.id IS NOT NULL
-		    THEN DT.active!=0 AND LD.active!=0
-		END)
-	    OR (LD.name IS '%s'
-		AND DT.active!=0 AND LD.active!=0)
+        THEN coalesce(AT.transport, '')
+        || ':' || (CASE WHEN AT.mx=0
+        THEN '[' || coalesce(ATN.name, '') || ']'
+        ELSE coalesce(ATN.name, '') END) ||
+        (CASE WHEN AT.port IS NOT NULL
+        THEN ':' || AT.port ELSE '' END)
+        ELSE coalesce(DT.transport, '')
+        || ':' || (CASE WHEN DT.mx=0
+        THEN '[' || coalesce(DTN.name, '') || ']'
+        ELSE coalesce(DTN.name, '') END) ||
+        (CASE WHEN DT.port IS NOT NULL
+        THEN ':' || DT.port ELSE '' END)
+        END
+    FROM Domain AS LD
+        LEFT JOIN Address AS LA ON LD.id=LA.domain
+        LEFT JOIN Transport AS DT on LD.transport=DT.id
+        LEFT JOIN Transport AS AT on LA.transport=AT.id
+        LEFT JOIN Domain AS DTN ON DT.nexthop=DTN.id
+        LEFT JOIN Domain AS ATN ON AT.nexthop=ATN.id
+    WHERE (LA.localpart || '@' || LD.name IS '%s'
+        AND CASE WHEN AT.id IS NOT NULL
+            THEN AT.active!=0 AND LA.active!=0
+        WHEN DT.id IS NOT NULL
+            THEN DT.active!=0 AND LD.active!=0
+        END)
+        OR (LD.name IS '%s'
+        AND DT.active!=0 AND LD.active!=0)
 
 # Because of all the LEFT JOINs, this query returns multiple identical
 # rows in many cases; thus this SELECT needed the DISTINCT keyword to

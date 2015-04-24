@@ -60,7 +60,7 @@ default_pass_scheme = MD5
 password_query = SELECT '%u' AS user, V1.password, \
 	coalesce(V1.uid, D1.class) AS userdb_uid, \
 	coalesce(V1.gid, 800) AS userdb_gid, \
-	'/home/' || coalesce(V1.home, 'vmail/%d/%n') AS userdb_home \
+	coalesce(V1.home, '{{ vmail }}/%d/%n') AS userdb_home \
 	FROM VMailbox AS V1 \
 	JOIN Address AS A1 ON (V1.id=A1.id) \
 	JOIN Domain AS D1 ON (A1.domain=D1.id) \
@@ -80,7 +80,7 @@ password_query = SELECT '%u' AS user, V1.password, \
 ### Even with the prefetch userdb, a user_query is still needed.
 user_query = SELECT coalesce(V1.uid, D1.class) AS uid, \
 	coalesce(V1.gid, 800) AS gid, \
-	'/home/' || coalesce(V1.home, 'vmail/%d/%n') AS home \
+	coalesce(V1.home, '{{ vmail }}/%d/%n') AS home \
 	FROM VMailbox AS V1 \
 	JOIN Address AS A1 ON (v1.id=A1.id) \
 	JOIN Domain AS D1 ON (A1.domain=D1.id) \

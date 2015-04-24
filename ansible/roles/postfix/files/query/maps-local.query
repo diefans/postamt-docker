@@ -1,6 +1,6 @@
 dbpath = /etc/postfix/private/mail.sqlite
 query = SELECT localpart FROM Address
-	WHERE localpart is '%s' AND domain=0 AND active!=0
+    WHERE localpart is '%s' AND domain=0 AND active!=0
 
 # This is an optional query for local_recipient_maps. I chose not to
 # deploy it for usability reasons, but this file is here as

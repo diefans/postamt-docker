@@ -1,0 +1,10 @@
+root: "{{ lookup('env', 'POSTAMT_ROOT') or '/srv/postamt' }}"
+
+data: "{{ root }}/data"
+ssl: "{{ data }}/ssl"
+
+vmail: "{{ data }}/vmail"
+
+sqlite_db: "{{ lookup('env', 'POSTAMT_DB') or data + '/mail.sqlite' }}"
+
+myhostname: "{{ lookup('env', 'HOSTNAME') or 'localhost' }}"

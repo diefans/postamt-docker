@@ -6,18 +6,18 @@ dbpath = /etc/postfix/private/mail.sqlite
 # TD = Target Domain
 
 query = SELECT ALL
-	  CASE WHEN Alias.target=0 THEN Alias.extension
-	  ELSE TA.localpart ||
-	    (CASE WHEN Alias.extension IS NOT NULL THEN '-'
-	      || Alias.extension ELSE '' END) ||
-	    (CASE WHEN TD.id=0 THEN '' ELSE '@' || TD.name END)
-	  END
-	FROM "Alias"
-	JOIN "Address" AS TA ON Alias.target=TA.id
-	JOIN "Domain" AS TD ON TA.domain=TD.id
-	JOIN "Address" AS AA ON Alias.address=AA.id
-	WHERE AA.localpart IS '%s'
-	AND AA.domain=0 AND Alias.active!=0;
+      CASE WHEN Alias.target=0 THEN Alias.extension
+      ELSE TA.localpart ||
+        (CASE WHEN Alias.extension IS NOT NULL THEN '-'
+          || Alias.extension ELSE '' END) ||
+        (CASE WHEN TD.id=0 THEN '' ELSE '@' || TD.name END)
+      END
+    FROM "Alias"
+    JOIN "Address" AS TA ON Alias.target=TA.id
+    JOIN "Domain" AS TD ON TA.domain=TD.id
+    JOIN "Address" AS AA ON Alias.address=AA.id
+    WHERE AA.localpart IS '%s'
+    AND AA.domain=0 AND Alias.active!=0;
 
 # This is the Postfix alias_maps lookup. The FROM clause is a bit
 # simpler than in the virtual_alias_maps lookup, because we have no need
@@ -60,7 +60,7 @@ query = SELECT ALL
 
 # A simple plain-language rundown:
 # Select:
-#	Alias.extension when Alias.target=0, else
-#	(Target's Address.localpart,
-#	(- and Alias.extension if that exists)
-#	and '@' and Target's Domain.name)
+#    Alias.extension when Alias.target=0, else
+#    (Target's Address.localpart,
+#    (- and Alias.extension if that exists)
+#    and '@' and Target's Domain.name)

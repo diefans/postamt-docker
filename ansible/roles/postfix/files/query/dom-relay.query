@@ -1,3 +1,3 @@
 dbpath = /etc/postfix/private/mail.sqlite
 query = SELECT Domain.name FROM Domain WHERE Domain.class=2
-	AND Domain.active!=0 AND Domain.name IS '%s'
+    AND Domain.active!=0 AND Domain.name IS '%s'

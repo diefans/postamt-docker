@@ -1,0 +1,32 @@
+[ req ]
+#default_bits = {{ POSTAMT_DOVECOT_SSL_BITS }}
+encrypt_key = yes
+distinguished_name = req_dn
+x509_extensions = cert_type
+prompt = no
+days = {{ POSTAMT_DOVECOT_SSL_DAYS }}
+
+[ req_dn ]
+# country (2 letter code)
+#C=FI
+
+# State or Province Name (full name)
+#ST=
+
+# Locality Name (eg. city)
+#L={{ POSTAMT_DOVECOT_SSL_L }}
+
+# Organization (eg. company)
+#O=Dovecot
+
+# Organizational Unit Name (eg. section)
+OU=IMAP server
+
+# Common Name (*.example.com is also possible)
+CN={{ POSTAMT_DOVECOT_SSL_CN }}
+
+# E-mail contact
+emailAddress={{ POSTAMT_DOVECOT_SSL_EMAIL }}
+
+[ cert_type ]
+nsCertType = server

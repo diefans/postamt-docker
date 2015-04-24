@@ -1,16 +1,16 @@
 dbpath = /etc/postfix/private/mail.sqlite
 
 query = SELECT CASE WHEN A1.active!=0 AND A1.rclass IS NOT NULL
-	    THEN substr((100 + A1.rclass), 2, 2)
-	    ELSE substr((100 + D1.rclass), 2, 2) END
-	FROM "Address" AS A1
-		JOIN "Domain" AS D1 ON A1.domain=D1.id
-	WHERE A1.localpart IS '%u' AND D1.name IS '%d'
+        THEN substr((100 + A1.rclass), 2, 2)
+        ELSE substr((100 + D1.rclass), 2, 2) END
+    FROM "Address" AS A1
+        JOIN "Domain" AS D1 ON A1.domain=D1.id
+    WHERE A1.localpart IS '%u' AND D1.name IS '%d'
 
 # Postfix smtpd(8) access(5) lookups for email addresses
-#	Case 1: smtpd searches for user-exten@domain
-#	Case 2: smtpd searches for user@domain
-#	Case 3: smtpd searches for domain (%u is suppressed)
+#    Case 1: smtpd searches for user-exten@domain
+#    Case 2: smtpd searches for user@domain
+#    Case 3: smtpd searches for domain (%u is suppressed)
 # This query will match without ever going to Case 3. If there is an
 # extension, it won't match unless user-exten@domain is in the Address
 # table. (In most cases, it would not be.)

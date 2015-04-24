@@ -1,11 +1,20 @@
 ---
 # standard postfix installation
 
+- name: purge postfix
+  apt: name=postfix state=absent purge=true
+
 - name: install postfix
   apt: name={{ item }} state=present
   with_items:
     - postfix
+    - postfix-pcre
+    - mailman
     - tumgreyspf
+
+# somehow this is not set up
+- name: link services
+  file: path=/var/spool/postfix/etc/services src=/etc/services state=link
 
 - name: setup master.cf
   template: src=master.cf.j2 dest=/etc/postfix/master.cf
@@ -16,8 +25,16 @@
 - name: install queries
   copy: src=query dest=/etc/postfix
 
+- name: install queries templates
+  template: src=query/{{ item }} dest=/etc/postfix/query
+  with_items:
+    - maps-vmbox.query
+
 - name: create private
   file: path=/etc/postfix/private state=directory owner=postfix mode=0750
 
-- name: hardlink postfix mail db
-  file: path=/etc/postfix/private/mail.sqlite src={{ data }}/mail.sqlite state=link
+- name: link postfix mail db
+  file: path=/etc/postfix/private/mail.sqlite src={{ sqlite_db }} state=link
+
+- name: link helo_checks
+  file: path=/etc/postfix/helo_checks src={{ data }}/helo_checks state=link force=true

@@ -1,14 +1,16 @@
 ---
 # setup of sqlite db
+- name: install postamt deps
+  apt: name={{ item }} state=present
+  with_items:
+    - python-dev
+    - sqlite3
 
-- name: install sqlite3
-  apt: name=sqlite3 state=present
+- name: install postamt
+  pip: name=postamt state=latest
 
 - name: create data
   file: path={{ data }} state=directory
 
-- name: copy sql
-  copy: src=create.sql dest={{ root }}/create.sql
-
-- name: create db file
-  shell: sqlite3 -echo "{{ data }}/mail.sqlite" < {{ root }}/create.sql
+- name: init db
+  command: postamt init

@@ -1,3 +1,7 @@
+# debug
+debug_peer_level = 3
+debug_peer_list = 127.0.0.1
+
 # A little shortcut to our query files
 query = sqlite:$config_directory/query
 
@@ -13,7 +17,7 @@ enable_long_queue_ids = yes
 
 # We're doing the same thing with local and virtual delivery, delivering
 # to $HOME/Mail/ maildir. Dovecot likes consistency.
-home_mailbox = Mail/
+home_mailbox = mail/
 html_directory = /usr/doc/postfix/html
 inet_protocols = ipv4
 # uncomment this if you want to force all addresses into SQLite
@@ -113,14 +117,15 @@ smtpd_reject_footer = See your own postmaster for help, or
 # This setting is called from master.cf for 587.
 submission_rcpt_restrictions = permit_sasl_authenticated,
 	permit_mynetworks, reject
+
 smtpd_sasl_path = private/auth
 smtpd_sasl_type = dovecot
 
 # Note: TLS configuration is not covered in this document; see here for
 #	details:	http://www.postfix.org/TLS_README.html
 smtpd_tls_CApath = /etc/ssl/certs
-smtpd_tls_cert_file = /etc/ssl/certs/myhostname.example.org.crt
-smtpd_tls_key_file = /etc/ssl/private/myhostname.example.org.key
+smtpd_tls_cert_file = {{ ssl }}/postfix.crt
+smtpd_tls_key_file = {{ ssl }}/postfix.key
 smtpd_tls_loglevel = 1
 smtpd_tls_received_header = yes
 smtpd_tls_security_level = may
@@ -135,11 +140,11 @@ virtual_alias_domains = $query/dom-valias.query
 virtual_alias_maps = $query/maps-valias.query
 
 virtual_gid_maps = $query/maps-vgid.query
+virtual_uid_maps = $query/maps-vuid.query
 virtual_mailbox_base = {{ vmail }}
 virtual_mailbox_domains = $query/dom-vmbox.query
 virtual_mailbox_maps = $query/maps-vmbox.query
-virtual_minimum_uid = 800
-virtual_uid_maps = $query/maps-vuid.query
+virtual_minimum_uid = 500
 
 # restriction classes below
 #

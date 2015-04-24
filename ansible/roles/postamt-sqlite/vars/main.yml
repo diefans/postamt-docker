@@ -1,6 +1,0 @@
-root: /srv/postamt
-data: "{{ root }}/data"
-sqlite_db: "{{ data }}/mail.sqlite"
-
-vmail: "{{ data }}/vmail"
-myhostname: digitalarchitekt.de

@@ -6,11 +6,11 @@
   with_items:
     - python
     - python-pip
+    - rsyslog
 
 
 - name: install supervisor
   pip: name=supervisor state=present
-
 
 - name: create config dir
   file: path=/etc/supervisor/conf.d state=directory

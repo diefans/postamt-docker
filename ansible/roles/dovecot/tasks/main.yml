@@ -1,20 +1,43 @@
 ---
 # default dovecot installation
 
+# see 10-mail.conf
+# mail_uid = 500
+# mail_gid = 500
+- name: setup postamt group
+  group: name=postamt gid=500 state=present
+
+- name: setup postamt user
+  user: name=postamt uid=500 group=postamt state=present home={{ vmail }}
+
 - name: install dovecot
   apt: name={{ item }} state=present
   with_items:
     - dovecot-sqlite
     - dovecot-imapd
 
-- name: install dovecot.conf
-  copy: src=dovecot.conf dest=/etc/dovecot
+- name: install dovecot configs
+  copy: src={{ item }} dest=/etc/dovecot
+  with_items:
+    - dovecot.conf
+    - sql-deny.conf.ext
+
+- name: install dovecot sql configs
+  template: src={{ item }} dest=/etc/dovecot
+  with_items:
+    - sql.conf.ext
 
 - name: install dovecot configs
   copy: src=conf.d dest=/etc/dovecot
 
+- name: install dovecot config templates
+  template: src=conf.d/{{ item }} dest=/etc/dovecot/conf.d
+  with_items:
+    - 10-mail.conf
+    - 10-ssl.conf
+
 - name: create private
   file: path=/etc/dovecot/private state=directory owner=dovecot mode=0750
 
-- name: hardlink dovecot mail db
-  file: path=/etc/dovecot/private/mail.sqlite src={{ data }}/mail.sqlite state=link
+- name: link dovecot mail db
+  file: path=/etc/dovecot/private/mail.sqlite src={{ sqlite_db }} state=link

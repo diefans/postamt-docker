@@ -8,15 +8,15 @@ dbpath = /etc/postfix/private/mail.sqlite
 # VA = Virtual Alias
 
 query = SELECT TA.localpart || (CASE WHEN VA.extension IS NOT NULL
-	  THEN '-' || VA.extension ELSE '' END) ||
-	  (CASE WHEN TD.id=0 THEN '' ELSE '@' || TD.name END)
-	FROM Alias AS VA
-	  JOIN Address AS TA ON (VA.target = TA.id)
-	  JOIN Domain AS TD ON (TA.domain = TD.id)
-	  JOIN Address AS AA ON (VA.address = AA.id)
-	  JOIN Domain AS AD ON (AA.domain = AD.id)
-	WHERE AA.localpart || '@' || AD.name IS '%s'
-	AND VA.active!=0
+      THEN '-' || VA.extension ELSE '' END) ||
+      (CASE WHEN TD.id=0 THEN '' ELSE '@' || TD.name END)
+    FROM Alias AS VA
+      JOIN Address AS TA ON (VA.target = TA.id)
+      JOIN Domain AS TD ON (TA.domain = TD.id)
+      JOIN Address AS AA ON (VA.address = AA.id)
+      JOIN Domain AS AD ON (AA.domain = AD.id)
+    WHERE AA.localpart || '@' || AD.name IS '%s'
+    AND VA.active!=0
 
 # This query has the postconf value of $recipient_delimiter hardcoded:
 # '-' above. If you change that in dovecot/conf.d/15-lda.conf and

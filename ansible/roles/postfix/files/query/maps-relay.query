@@ -1,8 +1,8 @@
 dbpath = /etc/postfix/private/mail.sqlite
 query = SELECT A1.id FROM Address AS A1
-	JOIN Domain AS D1 ON A1.domain=D1.id
-	WHERE A1.localpart || '@' || D1.name IS '%s'
-	AND A1.active!=0
+    JOIN Domain AS D1 ON A1.domain=D1.id
+    WHERE A1.localpart || '@' || D1.name IS '%s'
+    AND A1.active!=0
 
 # This is the relay_recipient_maps query, and it illustrates the basis
 # for all the other maps queries. The Address table contains a string
