@@ -44,7 +44,6 @@ if [ ! -f $POSTAMT_POSTFIX_SSL.key ] || [ ! -z "$POSTAMT_SSL_MAKE" ]; then
     create_self_signed_cert $POSTAMT_POSTFIX_SSL $POSTAMT_POSTFIX_SSL_CN
 fi
 
-ls -lisa --color=auto $POSTAMT_SSL
 
 # postfix helo_checks
 touch $POSTAMT_DATA/helo_checks
