@@ -9,8 +9,13 @@
   with_items:
     - postfix
     - postfix-pcre
+    - spf-tools-python
     - mailman
-    - tumgreyspf
+    #- postfix-policyd-spf-python
+    #- tumgreyspf
+
+- name: install policyd-spf
+  pip: name=pypolicyd-spf state=latest
 
 # somehow this is not set up
 - name: link services

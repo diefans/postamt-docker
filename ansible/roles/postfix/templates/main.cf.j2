@@ -146,6 +146,10 @@ virtual_mailbox_domains = $query/dom-vmbox.query
 virtual_mailbox_maps = $query/maps-vmbox.query
 virtual_minimum_uid = 500
 
+# spf policy
+policy-spf_time_limit = 3600s
+
+
 # restriction classes below
 #
 # NAMING SCHEME:
@@ -166,14 +170,14 @@ virtual_minimum_uid = 500
 # spaces. In postconf(5) syntax there is no distinction between forms of
 # whitespace: spaces, tabs, commas, and newline followed by whitespace.
 
-smtpd_restriction_classes = z-swl,z-dnswlAll,z-dnswlLo,z-dnswlMed,
-	z-dnswlHi,z-dnswlBLesp,z-zen,z-brbl,z-sem,z-ahbl,z-njabl,
-	z-spamcop,z-sorbs,z-trbl,z-common,z-helo,z-noSender,z-unlist,
-	z-semBscat,z-bscatOrg,z-bscat,z-dblC,z-dblH,z-dblS,
-	z-noPtr,z-noFCrDns,z-unkHelo,z-warnDefer,
+smtpd_restriction_classes = z-swl, z-dnswlAll, z-dnswlLo, z-dnswlMed,
+	z-dnswlHi, z-dnswlBLesp, z-zen, z-brbl, z-sem, z-ahbl, z-njabl,
+	z-spamcop, z-sorbs, z-trbl, z-common, z-helo, z-noSender, z-unlist,
+	z-semBscat, z-bscatOrg, z-bscat, z-dblC, z-dblH, z-dblS,
+	z-noPtr, z-noFCrDns, z-unkHelo, z-warnDefer, z-spf,
 	RC00 RC01 RC10 RC20 RC29 RC30 RC40 RC50
-#	RC00-reject, RC01-nuts,RC10-aggressive,RC20-moderate,
-#	RC29-whn,RC30-conservative,RC40-weak,RC50-open
+#	RC00-reject,  RC01-nuts, RC10-aggressive, RC20-moderate,
+#	RC29-whn, RC30-conservative, RC40-weak, RC50-open
 
 ### Composite classes
 #
@@ -185,73 +189,76 @@ RC00 = reject
 # and "open" are highly discouraged
 #
 # RC01-nuts: don't use this, it is nuts. You will block good mail.
-RC01 = z-common,z-noFCrDns,z-unkHelo,z-dblC,z-dblH,z-dblS,z-brbl,
-	z-sem,z-ahbl,z-njabl,z-trbl,z-sorbs,z-spamcop,z-bscat,
-	z-dnswlBLesp
+RC01 = z-common, z-noFCrDns, z-unkHelo, z-dblC, z-dblH, z-dblS, z-brbl,
+	z-sem, z-ahbl, z-njabl, z-trbl, z-sorbs, z-spamcop, z-bscat,
+	z-dnswlBLesp,
+    z-spf
 # RC10-aggressive: when strong anti-spam policies are more important
 #	than occasionally missing a legitimate email
-RC10 = z-common,z-noFCrDns,warn_if_reject,z-unkHelo,
-	z-dblC,z-dblH,z-dblS,z-swl,z-dnswlHi,z-brbl,z-sem,
-	z-dnswlMed,z-ahbl,z-njabl,
-	z-dnswlAll,z-trbl,z-sorbs,z-spamcop,z-bscat
+RC10 = z-common, z-noFCrDns, warn_if_reject, z-unkHelo,
+	z-dblC, z-dblH, z-dblS, z-swl, z-dnswlHi, z-brbl, z-sem,
+	z-dnswlMed, z-ahbl, z-njabl,
+	z-dnswlAll, z-trbl, z-sorbs, z-spamcop, z-bscat,
+    z-spf
 # RC20-moderate
-RC20 = z-common,z-noPtr,z-dblS,z-dblH,z-dblC,
-	z-swl,z-dnswlLo,z-brbl,z-sem,z-ahbl,z-njabl,z-bscat
+RC20 = z-common, z-noPtr, z-dblS, z-dblH, z-dblC,
+	z-swl, z-dnswlLo, z-brbl, z-sem, z-ahbl, z-njabl, z-bscat, z-spf
 # RC30-conservative: when more spam is considered better than the
 #	occasional rejection of legitimate email
-RC30 = z-common,warn_if_reject,z-noPtr,
-	z-dblC,z-dblH,z-dblS,z-swl,z-dnswlAll,z-brbl,z-sem,z-ahbl,
-	z-njabl,warn_if_reject,z-bscat
+RC30 = z-common, warn_if_reject, z-noPtr,
+	z-dblC, z-dblH, z-dblS, z-swl, z-dnswlAll, z-brbl, z-sem, z-ahbl,
+	z-njabl, warn_if_reject, z-bscat, z-spf
 # RC40-weak: does very little against spam
 RC40 = z-common
 #	uncomment the following to get logs of what could have been
 #	rejected:
-#	warn_if_reject,z-noPtr,warn_if_reject,z-dblC,
-#	warn_if_reject,z-dblH,warn_if_reject,z-dblS,
-#	warn_if_reject,z-brbl,warn_if_reject,z-sem,
-#	warn_if_reject,z-ahbl,warn_if_reject,z-njabl,
-#	warn_if_reject,z-bscat
-# RC50-open: does nothing against spam. But do note, with postscreen in
-#	use, this host cannot be truly "open".
+#	warn_if_reject, z-noPtr, warn_if_reject, z-dblC,
+#	warn_if_reject, z-dblH, warn_if_reject, z-dblS,
+#	warn_if_reject, z-brbl, warn_if_reject, z-sem,
+#	warn_if_reject, z-ahbl, warn_if_reject, z-njabl,
+#	warn_if_reject, z-bscat
+# RC50-open: does nothing against spam. But do note,  with postscreen in
+#	use,  this host cannot be truly "open".
 RC50 = permit
 
 # RC29-whn: a custom class designed for a particular domain
-RC29 = z-common,z-noPtr,z-dblS,z-dblH,z-dblC,z-swl,z-dnswlAll,
-	z-brbl,z-sem,z-ahbl,z-njabl,z-bscat
+RC29 = z-common, z-noPtr, z-dblS, z-dblH, z-dblC, z-swl, z-dnswlAll,
+	z-brbl, z-sem, z-ahbl, z-njabl, z-bscat, z-spf
 
 ### Component classes
 
-### Most of these will only do one thing, although some will call other
+### Most of these will only do one thing,  although some will call other
 ### components.
-z-ahbl = reject_rbl_client,dnsbl.ahbl.org
-z-brbl = reject_rbl_client,b.barracudacentral.org
-z-bscat = check_sender_access,$query/access-bscat.query
-z-bscatOrg = reject_rbl_client,ips.backscatterers.org
-z-common = z-helo,z-unlist,z-noSender,z-zen
-z-dblC = reject_rhsbl_client,dbl.spamhaus.org
-z-dblH = reject_rhsbl_helo,dbl.spamhaus.org
-z-dblS = reject_rhsbl_sender,dbl.spamhaus.org
-z-dnswlAll = permit_dnswl_client,list.dnswl.org
+z-ahbl = reject_rbl_client, dnsbl.ahbl.org
+z-brbl = reject_rbl_client, b.barracudacentral.org
+z-bscat = check_sender_access, $query/access-bscat.query
+z-bscatOrg = reject_rbl_client, ips.backscatterers.org
+z-common = z-helo, z-unlist, z-noSender, z-zen
+z-dblC = reject_rhsbl_client, dbl.spamhaus.org
+z-dblH = reject_rhsbl_helo, dbl.spamhaus.org
+z-dblS = reject_rhsbl_sender, dbl.spamhaus.org
+z-dnswlAll = permit_dnswl_client, list.dnswl.org
 ### ! using dnswl's code for ESP as a blacklist !
-z-dnswlBLesp = reject_dnsbl_client,list.dnswl.org=127.[0..255].15.0
-### ! Kids, don't try that at home !
-z-dnswlHi = permit_dnswl_client,list.dnswl.org=127.[0..255].[0..255].[3..255]
-z-dnswlLo = permit_dnswl_client,list.dnswl.org=127.[0..255].[0..255].[1..255]
-z-dnswlMed = permit_dnswl_client,list.dnswl.org=127.[0..255].[0..255].[2..255]
-z-helo = check_helo_access,pcre:$config_directory/helo_checks,
-z-njabl = reject_rbl_client,dnsbl.njabl.org
+z-dnswlBLesp = reject_dnsbl_client, list.dnswl.org=127.[0..255].15.0
+### ! Kids,  don't try that at home !
+z-dnswlHi = permit_dnswl_client, list.dnswl.org=127.[0..255].[0..255].[3..255]
+z-dnswlLo = permit_dnswl_client, list.dnswl.org=127.[0..255].[0..255].[1..255]
+z-dnswlMed = permit_dnswl_client, list.dnswl.org=127.[0..255].[0..255].[2..255]
+z-helo = check_helo_access, pcre:$config_directory/helo_checks,
+z-njabl = reject_rbl_client, dnsbl.njabl.org
 z-noFCrDns = reject_unknown_client_hostname
 z-noPtr = reject_unknown_reverse_client_hostname
 z-noSender = reject_unknown_sender_domain,
-z-sem = reject_rbl_client,bl.spameatingmonkey.net
-z-semBscat = reject_rbl_client,backscatter.spameatingmonkey.net
-z-sorbs = reject_rbl_client,dnsbl.sorbs.net
-z-spamcop = reject_rbl_client,bl.spamcop.net
-z-swl = permit_dnswl_client,swl.spamhaus.org
-z-trbl = reject_rbl_client,spamtrap.trblspam.com
+z-sem = reject_rbl_client, bl.spameatingmonkey.net
+z-semBscat = reject_rbl_client, backscatter.spameatingmonkey.net
+z-sorbs = reject_rbl_client, dnsbl.sorbs.net
+z-spamcop = reject_rbl_client, bl.spamcop.net
+z-swl = permit_dnswl_client, swl.spamhaus.org
+z-trbl = reject_rbl_client, spamtrap.trblspam.com
 z-unkHelo = reject_unknown_helo_hostname
 z-unlist = reject_unlisted_recipient
-z-warnDefer = check_client_access,static:warn,defer_if_reject
-z-zen = reject_rbl_client,zen.spamhaus.org
+z-warnDefer = check_client_access, static:warn, defer_if_reject
+z-zen = reject_rbl_client, zen.spamhaus.org
+z-spf = check_policy_service unix:private/policy-spf
 
 ### end of main.cf
