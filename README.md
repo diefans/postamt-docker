@@ -60,6 +60,25 @@ sudo docker exec -it postamt postamt user add foo@foo.bar -p foobar
 ```
 
 
+## Inside the postamt container
+
+All variable data is located in ``/srv/postamt/data``.
+
+```
+data
+|-- helo_checks
+|-- mail.sqlite
+|-- ssl
+|   |-- dovecot.crt
+|   |-- dovecot.key
+|   |-- postfix.crt
+|   `-- postfix.key
+`-- vmail
+```
+
+
 ## Notes
 
 I took the howto from http://rob0.nodns4.us/howto/ and tried to implement it. Please see https://github.com/diefans/postamt-admin for the admin.
+
+At the moment debugging is turned on, as long as I need it.
