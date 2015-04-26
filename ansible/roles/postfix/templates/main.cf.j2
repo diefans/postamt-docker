@@ -37,7 +37,7 @@ myhostname = {{ myhostname }}
 mydomain = $myhostname
 # myorigin can be a cause of problems if misunderstood, as well.
 myorigin = $myhostname
-mynetworks = 127.0.0.0/8, 172.16.1.0/24, 192.168.0.0/20
+mynetworks = 127.0.0.0/8, 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16
 newaliases_path = /usr/bin/newaliases
 # require explicit ".domain.tld" patterns when subdomain matching is
 # desired
@@ -260,5 +260,7 @@ z-unlist = reject_unlisted_recipient
 z-warnDefer = check_client_access, static:warn, defer_if_reject
 z-zen = reject_rbl_client, zen.spamhaus.org
 z-spf = check_policy_service unix:private/policy-spf
+z-body = pcre:$config_directory/body_checks
+z-header = pcre:$config_directory/header_checks
 
 ### end of main.cf

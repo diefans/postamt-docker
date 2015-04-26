@@ -42,4 +42,8 @@
   file: path=/etc/postfix/private/mail.sqlite src={{ sqlite_db }} state=link
 
 - name: link helo_checks
-  file: path=/etc/postfix/helo_checks src={{ data }}/helo_checks state=link force=true
+  file: path=/etc/postfix/{{ item }} src={{ data }}/{{ item }} state=link force=true
+  with_items:
+    - helo_checks
+    - body_checks
+    - header_checks

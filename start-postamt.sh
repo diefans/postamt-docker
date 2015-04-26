@@ -47,6 +47,8 @@ fi
 
 # postfix helo_checks
 touch $POSTAMT_DATA/helo_checks
+touch $POSTAMT_DATA/header_checks
+touch $POSTAMT_DATA/body_checks
 
 
 # TODO may be turn this off
